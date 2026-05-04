@@ -10,3 +10,5 @@ class BlogDB(Base):
     title = Column(String)
     content = Column(String)
     owner_id = Column(Integer, ForeignKey("users.id"))
+    image_url = Column(String, nullable=True)
+  

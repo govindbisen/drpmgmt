@@ -1,43 +1,96 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas.blog import BlogCreate
-from app.crud.blog import create_blog, get_blogs
-from app.schemas.blog import BlogUpdate
-from app.crud.blog import update_blog, delete_blog
+from app.schemas.blog import BlogCreate, BlogUpdate
+from app.crud.blog import create_blog, get_blogs, update_blog, delete_blog
 from app.utils.deps import get_current_user
-from fastapi import Depends
 
-router = APIRouter()
+import shutil
+import os
+import uuid
 
+from app.utils.s3 import generate_presigned_upload_url, get_file_url
+
+router = APIRouter()   # ✅ ONLY ONCE
+
+# 🔥 CREATE
 @router.post("/blogs")
-def create(blog: BlogCreate,
+def create(
+    blog: BlogCreate,
     db: Session = Depends(get_db),
-    user = Depends(get_current_user)):
-    return create_blog(db, blog, user) 
+    user=Depends(get_current_user)
+):
+    return create_blog(db, blog, user)
 
 
+# 🔥 READ
 @router.get("/blogs")
 def read(db: Session = Depends(get_db)):
     return get_blogs(db)
 
-# @router.put("/blogs/{blog_id}")
-# def update(blog_id: int, blog: BlogUpdate, db: Session = Depends(get_db)):
-#     return update_blog(db, blog_id, blog)
 
-# @router.delete("/blogs/{blog_id}")
-# def delete(blog_id: int, db: Session = Depends(get_db)):
-#     return delete_blog(db, blog_id)
-
+# 🔥 UPDATE
 @router.put("/blogs/{id}")
-def update(id: int, blog: BlogUpdate, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def update(
+    id: int,
+    blog: BlogUpdate,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
     return update_blog(db, id, blog, user)
 
 
+# 🔥 DELETE
 @router.delete("/blogs/{id}")
-def delete(id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def delete(
+    id: int,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
     return delete_blog(db, id, user)
 
+
+# 🔐 PROTECTED
 @router.get("/protected")
 def protected_route(user: str = Depends(get_current_user)):
-    return {"msg": f"Hello {user}, you are authenticated 🔐"}
+    return {"msg": f"Hello {user}"}
+
+
+# 📁 LOCAL IMAGE UPLOAD
+@router.post("/blogs/{id}/upload-image")
+def upload_image(id: int, file: UploadFile = File(...)):
+    os.makedirs("uploads/images", exist_ok=True)
+
+    file_path = f"uploads/images/{file.filename}"
+
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return {"filename": file.filename}
+
+
+# 🎥 VIDEO
+@router.post("/blogs/{id}/upload-video")
+def upload_video(id: int, file: UploadFile = File(...)):
+    os.makedirs("uploads/videos", exist_ok=True)
+
+    file_path = f"uploads/videos/{file.filename}"
+
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return {"video": file.filename}
+
+
+# ☁️ S3 PRESIGNED URL
+@router.post("/blogs/upload-url")
+def get_upload_url(content_type: str):
+    filename = str(uuid.uuid4())
+
+    url = generate_presigned_upload_url(filename, content_type)
+
+    return {
+        "upload_url": url,
+        "file_key": filename,
+        "file_url": get_file_url(filename)
+    }

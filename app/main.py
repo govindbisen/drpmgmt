@@ -11,6 +11,15 @@ from app.routers import auth
 
 app = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # dev ke liye
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # tables create
 Base.metadata.create_all(bind=engine)
 
