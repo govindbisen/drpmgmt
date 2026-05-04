@@ -4,6 +4,7 @@ from app.database import get_db
 from app.schemas.blog import BlogCreate, BlogUpdate
 from app.crud.blog import create_blog, get_blogs, update_blog, delete_blog
 from app.utils.deps import get_current_user
+from app.crud.blog import save_image_path
 
 import shutil
 import os
@@ -58,28 +59,41 @@ def protected_route(user: str = Depends(get_current_user)):
 
 # 📁 LOCAL IMAGE UPLOAD
 @router.post("/blogs/{id}/upload-image")
-def upload_image(id: int, file: UploadFile = File(...)):
+def upload_image(
+    id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
     os.makedirs("uploads/images", exist_ok=True)
 
-    file_path = f"uploads/images/{file.filename}"
+    # 🔥 unique filename
+    filename = f"{uuid.uuid4()}_{file.filename}"
+    file_path = f"uploads/images/{filename}"
 
+    # save file
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    return {"filename": file.filename}
-
-
+    # 🔥 DB + RBAC update
+    return save_image_path(db, id, file_path, user)
 # 🎥 VIDEO
 @router.post("/blogs/{id}/upload-video")
-def upload_video(id: int, file: UploadFile = File(...)):
+def upload_video(
+    id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
     os.makedirs("uploads/videos", exist_ok=True)
 
-    file_path = f"uploads/videos/{file.filename}"
+    filename = f"{uuid.uuid4()}_{file.filename}"
+    file_path = f"uploads/videos/{filename}"
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    return {"video": file.filename}
+    return save_image_path(db, id, file_path, user)
 
 
 # ☁️ S3 PRESIGNED URL

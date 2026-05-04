@@ -84,13 +84,19 @@ def _get_user_meta(db, username):
     return {"id": row[0], "role": row[1]}
 
 
-def save_image_path(db, blog_id, file_path):
+def save_image_path(db, blog_id, file_path, username):
+    user = _get_user_meta(db, username)
+
     blog = db.query(BlogDB).filter(BlogDB.id == blog_id).first()
 
     if not blog:
         raise HTTPException(status_code=404, detail="Blog not found")
 
-    blog.image_url = file_path   # ✅ yaha likhenge
+    # 🔐 RBAC + ownership check
+    if user["role"] != "admin" and blog.owner_id != user["id"]:
+        raise HTTPException(status_code=403, detail="Not your blog ❌")
+
+    blog.image_url = file_path
     db.commit()
     db.refresh(blog)
 

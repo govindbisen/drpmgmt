@@ -1,4 +1,11 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+import os
+
+os.makedirs("uploads/images", exist_ok=True)
+os.makedirs("uploads/videos", exist_ok=True)
+
+
 from app.database import Base, engine
 
 # models load karne ke liye
@@ -12,7 +19,7 @@ from app.routers import auth
 app = FastAPI()
 
 from fastapi.middleware.cors import CORSMiddleware
-
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # dev ke liye

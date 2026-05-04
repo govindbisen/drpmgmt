@@ -9,7 +9,7 @@ def create_user(db: Session, user):
     existing = db.query(UserDB).filter(UserDB.username == user.username).first()
 
     if existing:
-        raise HTTPException(status_code=400, detail="Username already exists ❌")
+        raise HTTPException(status_code=400, detail="Username already exists")
 
     new_user = UserDB(
         username=user.username,
