@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../redux/hooks/reduxHooks";
-import { fetchBlogs, createBlog } from "../redux/features/blog/blogSlice";
+import { fetchBlogs, createBlog, deleteBlog } from "../redux/features/blog/blogSlice";
 import { logout } from "../redux/features/auth/authSlice";
 import styles from "./Dashboard.module.css";
 
@@ -12,12 +12,12 @@ export default function Dashboard() {
   const [content, setContent] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const handleCreate = async () => {
-    // 1️⃣ blog create
+
     const res: any = await dispatch(createBlog({ title, content }));
 
     const blogId = res.payload.id;
 
-    // 2️⃣ image upload (agar image hai)
+
     if (image) {
       const formData = new FormData();
       formData.append("file", image);
@@ -36,7 +36,6 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-
     dispatch(fetchBlogs());
   }, []);
 
@@ -78,8 +77,19 @@ export default function Dashboard() {
               src={`http://127.0.0.1:8000/${b.image_url}`}
             />
           )}
+
+          <div className={styles.author}>
+            — Created by: {b.username}
+          </div>
+
+          <button onClick={() => dispatch(deleteBlog(b.id))}>
+            Delete
+          </button>
         </div>
+
       ))}
+
+
     </div>
   );
 }

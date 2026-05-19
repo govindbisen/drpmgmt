@@ -31,8 +31,8 @@ def create_blog(db, blog, username):
 
 
 
-def get_blogs(db: Session):
-    return db.query(BlogDB).all()
+# def get_blogs(db: Session):
+#     return db.query(BlogDB).all()
 
 def update_blog(db: Session, blog_id: int, blog,username):
     user = _get_user_meta(db, username)
@@ -101,3 +101,22 @@ def save_image_path(db, blog_id, file_path, username):
     db.refresh(blog)
 
     return blog
+
+
+def get_blogs(db: Session):
+    result = db.execute(text("""
+        SELECT blogs.id, blogs.title, blogs.content, blogs.image_url, users.username
+        FROM blogs
+        JOIN users ON blogs.owner_id = users.id
+    """)).fetchall()
+
+    return [
+        {
+            "id": row[0],
+            "title": row[1],
+            "content": row[2],
+            "image_url": row[3],
+            "username": row[4]
+        }
+        for row in result
+    ]

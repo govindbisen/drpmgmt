@@ -88,3 +88,25 @@
 .fileLabel:hover {
   background: #333;
 }
+
+.author {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #666;
+  border-top: 1px solid #eee;
+  padding-top: 6px;
+}
+
+.deleteBtn {
+  margin-top: 10px;
+  padding: 6px 10px;
+  background: red;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.deleteBtn:hover {
+  background: darkred;
+}

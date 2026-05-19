@@ -6,6 +6,7 @@ interface Blog {
   title: string;
   content: string;
   image_url?: string;
+  username: string;
 }
 
 interface BlogState {
@@ -25,23 +26,30 @@ export const fetchBlogs = createAsyncThunk("blog/fetch", async () => {
 
 export const createBlog = createAsyncThunk(
   "blog/create",
-  async (
-    data: { title: string; content: string },
-    { getState }
-  ) => {
+  async (data: { title: string; content: string }, { getState }) => {
     const state: any = getState();
     const token = state.auth.token;
 
-    const res = await axios.post(
-      "http://127.0.0.1:8000/blogs",
-      data,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    const res = await axios.post("http://127.0.0.1:8000/blogs", data, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
     return res.data;
-  }
+  },
+);
+
+export const deleteBlog = createAsyncThunk(
+  "blog/delete",
+  async (id: number) => {
+    await fetch(`http://127.0.0.1:8000/blogs/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    return id;
+  },
 );
 
 const blogSlice = createSlice({
@@ -59,6 +67,9 @@ const blogSlice = createSlice({
       })
       .addCase(createBlog.fulfilled, (state, action) => {
         state.blogs.push(action.payload);
+      })
+      .addCase(deleteBlog.fulfilled, (state, action) => {
+        state.blogs = state.blogs.filter((b) => b.id !== action.payload);
       });
   },
 });
