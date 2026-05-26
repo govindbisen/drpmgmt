@@ -20,7 +20,7 @@ def create_blog(db, blog, username):
     new_blog = BlogDB(
         title=blog.title,
         content=blog.content,
-        owner_id=user_id   # ✅ correct
+        owner_id=user_id   
     )
 
     db.add(new_blog)

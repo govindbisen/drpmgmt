@@ -1,110 +1,235 @@
-from fastapi import APIRouter, Depends, UploadFile, File
-from sqlalchemy.orm import Session
-from app.database import get_db
-from app.schemas.blog import BlogCreate, BlogUpdate
-from app.crud.blog import create_blog, get_blogs, update_blog, delete_blog
+from fastapi import (
+    APIRouter,
+    Depends,
+    UploadFile,
+    File,
+    HTTPException
+)
+
+from app.schemas.blog import (
+    BlogCreate,
+    BlogUpdate
+)
+
 from app.utils.deps import get_current_user
-from app.crud.blog import save_image_path
+from app.db.postgres import conn, cursor
 
 import shutil
 import os
 import uuid
 
-from app.utils.s3 import generate_presigned_upload_url, get_file_url
+router = APIRouter()
 
-router = APIRouter()   # ✅ ONLY ONCE
-
-# 🔥 CREATE
 @router.post("/blogs")
-def create(
+def create_blog(
     blog: BlogCreate,
-    db: Session = Depends(get_db),
     user=Depends(get_current_user)
 ):
-    return create_blog(db, blog, user)
+
+    cursor.execute(
+        """
+        INSERT INTO blogs
+        (title, content, category, author)
+
+        VALUES (%s, %s, %s, %s)
+
+        RETURNING *
+        """,
+        (
+            blog.title,
+            blog.content,
+            blog.category,
+            user
+        )
+    )
+
+    conn.commit()
+
+    created_blog = cursor.fetchone()
+
+    return created_blog
 
 
-# 🔥 READ
 @router.get("/blogs")
-def read(db: Session = Depends(get_db)):
-    return get_blogs(db)
+def get_blogs():
+
+    cursor.execute(
+        "SELECT * FROM blogs ORDER BY id DESC"
+    )
+
+    blogs = cursor.fetchall()
+
+    return blogs
 
 
-# 🔥 UPDATE
 @router.put("/blogs/{id}")
-def update(
+def update_blog(
     id: int,
     blog: BlogUpdate,
-    db: Session = Depends(get_db),
     user=Depends(get_current_user)
 ):
-    return update_blog(db, id, blog, user)
+
+    cursor.execute(
+        "SELECT * FROM blogs WHERE id=%s",
+        (id,)
+    )
+
+    existing_blog = cursor.fetchone()
+
+    if not existing_blog:
+        raise HTTPException(
+            status_code=404,
+            detail="Blog not found"
+        )
+
+    cursor.execute(
+        """
+        UPDATE blogs
+
+        SET title=%s,
+            content=%s,
+            category=%s
+
+        WHERE id=%s
+
+        RETURNING *
+        """,
+        (
+            blog.title,
+            blog.content,
+            blog.category,
+            id
+        )
+    )
+
+    conn.commit()
+
+    updated_blog = cursor.fetchone()
+
+    return updated_blog
 
 
-# 🔥 DELETE
+# =========================
+# DELETE BLOG
+# =========================
+
 @router.delete("/blogs/{id}")
-def delete(
+def delete_blog(
     id: int,
-    db: Session = Depends(get_db),
     user=Depends(get_current_user)
 ):
-    return delete_blog(db, id, user)
+
+    cursor.execute(
+        "SELECT * FROM blogs WHERE id=%s",
+        (id,)
+    )
+
+    blog = cursor.fetchone()
+
+    if not blog:
+        raise HTTPException(
+            status_code=404,
+            detail="Blog not found"
+        )
+
+    cursor.execute(
+        "DELETE FROM blogs WHERE id=%s",
+        (id,)
+    )
+
+    conn.commit()
+
+    return {
+        "message": "Blog deleted successfully"
+    }
 
 
-# 🔐 PROTECTED
+# =========================
+# PROTECTED
+# =========================
+
 @router.get("/protected")
-def protected_route(user: str = Depends(get_current_user)):
+def protected_route(
+    user: str = Depends(get_current_user)
+):
     return {"msg": f"Hello {user}"}
 
 
-# 📁 LOCAL IMAGE UPLOAD
+# =========================
+# IMAGE UPLOAD
+# =========================
+
 @router.post("/blogs/{id}/upload-image")
 def upload_image(
     id: int,
     file: UploadFile = File(...),
-    db: Session = Depends(get_db),
     user=Depends(get_current_user)
 ):
-    os.makedirs("uploads/images", exist_ok=True)
 
-    # 🔥 unique filename
+    os.makedirs(
+        "uploads/images",
+        exist_ok=True
+    )
+
     filename = f"{uuid.uuid4()}_{file.filename}"
+
     file_path = f"uploads/images/{filename}"
 
-    # save file
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # 🔥 DB + RBAC update
-    return save_image_path(db, id, file_path, user)
-# 🎥 VIDEO
+    cursor.execute(
+        """
+        UPDATE blogs
+        SET image=%s
+        WHERE id=%s
+        """,
+        (file_path, id)
+    )
+
+    conn.commit()
+
+    return {
+        "message": "Image uploaded",
+        "path": file_path
+    }
+
+
+# =========================
+# VIDEO UPLOAD
+# =========================
+
 @router.post("/blogs/{id}/upload-video")
 def upload_video(
     id: int,
     file: UploadFile = File(...),
-    db: Session = Depends(get_db),
     user=Depends(get_current_user)
 ):
-    os.makedirs("uploads/videos", exist_ok=True)
+
+    os.makedirs(
+        "uploads/videos",
+        exist_ok=True
+    )
 
     filename = f"{uuid.uuid4()}_{file.filename}"
+
     file_path = f"uploads/videos/{filename}"
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    return save_image_path(db, id, file_path, user)
+    cursor.execute(
+        """
+        UPDATE blogs
+        SET video=%s
+        WHERE id=%s
+        """,
+        (file_path, id)
+    )
 
-
-# ☁️ S3 PRESIGNED URL
-@router.post("/blogs/upload-url")
-def get_upload_url(content_type: str):
-    filename = str(uuid.uuid4())
-
-    url = generate_presigned_upload_url(filename, content_type)
+    conn.commit()
 
     return {
-        "upload_url": url,
-        "file_key": filename,
-        "file_url": get_file_url(filename)
+        "message": "Video uploaded",
+        "path": file_path
     }

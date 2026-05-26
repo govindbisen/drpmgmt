@@ -5,12 +5,7 @@ class UserCreate(BaseModel):
     username: str
     password: str
     role: str = "user"
-                                    #custom validators and serialization rules
-                                    # Developers can also create custom response serialization by modifying output data before returning it from endpoints.
-                                            # Custom validation is useful when:
-                                            # Business rules require complex validation logic
-                                            # Input data must be transformed before processing
-                                            # Security checks must be enforced
+    # custom velidation and serialization rule .           
     @field_validator("password")
     def password_length(cls, value):
        if len(value) < 8:

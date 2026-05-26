@@ -1,0 +1,164 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<section class="landing-banner">
+
+    <div class="landing-left">
+
+        <span class="mini-label">
+            ISKCON • Spiritual Blogs • Community
+        </span>
+
+        <h1>
+            Read Divine Stories
+            From ISKCON Jabalpur
+        </h1>
+
+        <p>
+            Discover spiritual experiences, peaceful
+            journeys, temple activities, Bhagavad Gita
+            teachings, and inspiring moments shared
+            by devotees and visitors.
+        </p>
+
+        <div class="banner-actions">
+            <button class="primary-btn">
+                Explore Blogs
+            </button>
+
+            <button class="secondary-btn">
+                Join Community
+            </button>
+        </div>
+
+    </div>
+
+    <div class="landing-right">
+
+        <div class="floating-card">
+
+            <div class="floating-top">
+                <span class="live-dot"></span>
+                Live Spiritual Community
+            </div>
+
+            <h3>
+                12K+ Monthly Readers
+            </h3>
+
+            <p>
+                People explore devotional stories,
+                meditation blogs, and spiritual
+                experiences every month.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="section-heading">
+
+    <div>
+        <h2>Latest Spiritual Articles</h2>
+        <p>
+            Handpicked blogs from devotees and
+            spiritual explorers.
+        </p>
+    </div>
+
+</section>
+
+
+<div class="modern-blog-layout">
+
+    {% for post in posts %}
+
+    <article class="modern-blog-card">
+
+        <div class="card-top-row">
+
+            <div class="profile-wrapper">
+
+                <img
+                    src="{{ url_for('static', path=post.author_image) }}"
+                    alt="{{ post.author }}"
+                    class="profile-image"
+                >
+
+                <div>
+
+                    <h4 class="profile-name">
+                        {{ post.author }}
+                    </h4>
+
+                    <span class="profile-username">
+                        @{{ post.author_username }}
+                    </span>
+
+                </div>
+
+            </div>
+
+            {% if post.featured %}
+                <span class="featured-pill">
+                    Featured
+                </span>
+            {% endif %}
+
+        </div>
+
+        <div class="category-pill">
+            {{ post.category }}
+        </div>
+
+        <h2 class="post-heading">
+            {{ post.title }}
+        </h2>
+
+        <p class="post-description">
+            {{ post.content }}
+        </p>
+
+        <div class="tag-wrapper">
+
+            {% for tag in post.tags %}
+
+                <span class="custom-tag">
+                    {{ tag }}
+                </span>
+
+            {% endfor %}
+
+        </div>
+
+        <div class="bottom-row">
+
+            <div class="interaction-group">
+
+                <span>👁 {{ post.views }}</span>
+                <span>❤️ {{ post.likes }}</span>
+                <span>💬 {{ post.comments }}</span>
+
+            </div>
+
+            <span class="reading-time">
+                {{ post.read_time }}
+            </span>
+
+        </div>
+
+        <div class="publish-date">
+            {{ post.date_posted }}
+        </div>
+
+    </article>
+
+    {% endfor %}
+
+</div>
+
+{% endblock content %}

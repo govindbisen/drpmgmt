@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    {% if title %}
+        <title>{{ title }} • DivineBlog</title>
+    {% else %}
+        <title>DivineBlog</title>
+    {% endif %}
+
+    <meta
+        name="description"
+        content="Modern spiritual blogging platform built using FastAPI."
+    >
+
+    <meta
+        name="theme-color"
+        content="#0f172a"
+    >
+
+    <!-- Google Fonts -->
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- Main CSS -->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='css/main.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <!-- =========================
+         NAVBAR
+    ========================== -->
+
+    <header class="custom-navbar">
+
+        <div class="nav-container">
+
+            <a
+                href="{{ url_for('home') }}"
+                class="logo-area"
+            >
+
+                <div class="logo-box">
+                    D
+                </div>
+
+                <div>
+                    <h2>DivineBlog</h2>
+                    <span>Spiritual Blogging</span>
+                </div>
+
+            </a>
+
+            <nav class="desktop-nav">
+
+                <a href="{{ url_for('home') }}">
+                    Home
+                </a>
+
+                <a href="#">
+                    Explore
+                </a>
+
+                <a href="#">
+                    Categories
+                </a>
+
+                <a href="#">
+                    Community
+                </a>
+
+            </nav>
+
+            <div class="nav-actions">
+
+                <button class="search-btn">
+                    🔍
+                </button>
+
+                <a
+                    href="#"
+                    class="login-btn"
+                >
+                    Login
+                </a>
+
+                <a
+                    href="#"
+                    class="register-btn"
+                >
+                    Register
+                </a>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+
+    <main class="main-wrapper">
+
+        {% block content %}
+        {% endblock content %}
+
+    </main>
+
+
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
+    <footer class="custom-footer">
+
+        <div class="footer-content">
+
+            <div class="footer-brand">
+
+                <div class="footer-logo">
+                    D
+                </div>
+
+                <div>
+
+                    <h3>DivineBlog</h3>
+
+                    <p>
+                        A modern spiritual blogging
+                        platform powered by FastAPI.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="footer-links">
+
+                <div>
+
+                    <h4>Platform</h4>
+
+                    <a href="#">Blogs</a>
+                    <a href="#">Categories</a>
+                    <a href="#">Authors</a>
+
+                </div>
+
+                <div>
+
+                    <h4>Community</h4>
+
+                    <a href="#">Events</a>
+                    <a href="#">Newsletter</a>
+                    <a href="#">Support</a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+
+            <p>
+                © <span id="year"></span>
+                DivineBlog • Built with FastAPI
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <!-- =========================
+         YEAR SCRIPT
+    ========================== -->
+
+    <script>
+        document.getElementById("year").textContent =
+            new Date().getFullYear();
+    </script>
+
+    <!-- Bootstrap -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+</body>
+
+</html>
