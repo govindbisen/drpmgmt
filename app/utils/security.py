@@ -1,3 +1,7 @@
+# bcrypt
+# verify_password
+# hash_password
+
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(

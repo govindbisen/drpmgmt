@@ -8,7 +8,8 @@ from fastapi import (
 
 from app.schemas.blog import (
     BlogCreate,
-    BlogUpdate
+    BlogUpdate,
+    
 )
 
 from app.utils.deps import get_current_user
@@ -18,80 +19,68 @@ import shutil
 import os
 import uuid
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/blogs",
+    tags=["Blogs"]
+)
 
-@router.post("/blogs")
+@router.post("/")
 def create_blog(
     blog: BlogCreate,
-    user=Depends(get_current_user)
+    # user=Depends(get_current_user)
 ):
 
     cursor.execute(
         """
         INSERT INTO blogs
         (title, content, category, author)
-
         VALUES (%s, %s, %s, %s)
-
         RETURNING *
         """,
         (
             blog.title,
             blog.content,
             blog.category,
-            user
+            "user"
         )
     )
-
     conn.commit()
-
     created_blog = cursor.fetchone()
-
     return created_blog
 
 
-@router.get("/blogs")
+@router.get("/")
 def get_blogs():
-
     cursor.execute(
         "SELECT * FROM blogs ORDER BY id DESC"
     )
-
     blogs = cursor.fetchall()
-
     return blogs
 
 
-@router.put("/blogs/{id}")
+@router.put("/{id}")
 def update_blog(
     id: int,
     blog: BlogUpdate,
-    user=Depends(get_current_user)
+    # user=Depends(get_current_user)
 ):
-
     cursor.execute(
         "SELECT * FROM blogs WHERE id=%s",
         (id,)
     )
-
     existing_blog = cursor.fetchone()
-
     if not existing_blog:
         raise HTTPException(
             status_code=404,
             detail="Blog not found"
         )
-
     cursor.execute(
         """
         UPDATE blogs
-
         SET title=%s,
             content=%s,
             category=%s
-
         WHERE id=%s
-
         RETURNING *
         """,
         (
@@ -101,22 +90,15 @@ def update_blog(
             id
         )
     )
-
     conn.commit()
-
     updated_blog = cursor.fetchone()
-
     return updated_blog
 
 
-# =========================
-# DELETE BLOG
-# =========================
-
-@router.delete("/blogs/{id}")
+@router.delete("/{id}")
 def delete_blog(
     id: int,
-    user=Depends(get_current_user)
+    # user=Depends(get_current_user)
 ):
 
     cursor.execute(
@@ -136,17 +118,11 @@ def delete_blog(
         "DELETE FROM blogs WHERE id=%s",
         (id,)
     )
-
     conn.commit()
-
     return {
         "message": "Blog deleted successfully"
     }
 
-
-# =========================
-# PROTECTED
-# =========================
 
 @router.get("/protected")
 def protected_route(
@@ -163,7 +139,7 @@ def protected_route(
 def upload_image(
     id: int,
     file: UploadFile = File(...),
-    user=Depends(get_current_user)
+    # user=Depends(get_current_user)
 ):
 
     os.makedirs(

@@ -6,11 +6,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   const token = useAppSelector(state => state.auth.token);
-
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={token ? <Dashboard /> : <Login />} />
+        {/* <Route path="/" element={token ? <Dashboard /> : <Login />} /> */}
+        <Route path="/" element={<Dashboard />} />
         <Route path="/signup" element={<Signup />} />
       </Routes>
     </BrowserRouter>

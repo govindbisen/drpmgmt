@@ -100,9 +100,11 @@ posts: list[dict] = [
 # routers
 from app.routers import blog as blog_router
 from app.routers import auth
+from app.routers import user 
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/uploads",StaticFiles(directory="uploads"),name="uploads")
 
 @app.get("/")
 def home():
@@ -137,8 +139,7 @@ app.add_middleware(
 # tables create
 # Base.metadata.create_all(bind=engine)
 
-
-
 # routers include
 app.include_router(blog_router.router)
 app.include_router(auth.router)
+app.include_router(user.router)
