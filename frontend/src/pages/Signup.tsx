@@ -10,9 +10,10 @@ export default function Signup() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
 
   const handleSignup = () => {
-    dispatch(registerUser({ username, password }));
+    dispatch(registerUser({ username, password, email }));
   };
 
   return (
@@ -24,6 +25,12 @@ export default function Signup() {
           className={styles.input}
           placeholder="username"
           onChange={(e) => setUsername(e.target.value)}
+        />
+
+        <input
+          className={styles.input}
+          placeholder="email"
+          onChange={(e) => setEmail(e.target.value)}
         />
 
         <input

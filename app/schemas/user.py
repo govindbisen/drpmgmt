@@ -54,6 +54,9 @@ class UserCreate(BaseModel):
             )
         return value
     
+class LoginUser(BaseModel):
+      username: str
+      password: str
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None

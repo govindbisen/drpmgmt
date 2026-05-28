@@ -82,6 +82,12 @@ pip install -r requirements.txt
 
 ## NEXT ---
 
+Protected routes in React (PrivateRoute)
+Role-based UI (admin/user dashboard)
+Axios global error handler system
+“Stay logged in” vs “remember me” system
+Complete MERN production auth architecture
+
 # =================================
 
 signup
@@ -92,6 +98,7 @@ forgot-password
 reset-password
 verify-email
 change-password
+oauth google se login
 token blacklist
 refresh token rotation
 device tracking
