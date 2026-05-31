@@ -1,70 +1,132 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import API from "../../../api/auth";
+
+/* =========================
+   TYPES
+========================= */
 
 interface AuthState {
-  token: string | null;
+  isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  user: any;
 }
 
+/* =========================
+   INITIAL STATE
+========================= */
+
 const initialState: AuthState = {
-  // token: null,
-  token: localStorage.getItem("token"),
-  loading: false,
+  isAuthenticated: false,
+  loading: true,
   error: null,
+  user: null,
 };
+
+/* =========================
+   LOGIN
+========================= */
 
 export const loginUser = createAsyncThunk(
   "auth/login",
-  async (data: { username: string; password: string }) => {
-    const res = await axios.post("http://127.0.0.1:8000/auth/login", data);
-    return res.data;
+  async (data: { username: string; password: string }, { rejectWithValue }) => {
+    try {
+      const res = await API.post("/auth/login", data);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || "Login failed");
+    }
   },
 );
 
+/* =========================
+   REGISTER
+========================= */
+
 export const registerUser = createAsyncThunk(
   "auth/register",
-  async (data: { username: string; password: string }) => {
-    const res = await axios.post("http://localhost:8000/auth/signup", data);
-    return res.data;
+  async (
+    data: { username: string; password: string; email: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const res = await API.post("/auth/signup", data);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || "Signup failed");
+    }
   },
 );
+
+/* =========================
+   ME (AUTO LOGIN CHECK)
+========================= */
+
+export const getCurrentUser = createAsyncThunk(
+  "auth/me",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await API.get("/auth/me");
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue("Not authenticated");
+    }
+  },
+);
+
+/* =========================
+   SLICE
+========================= */
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
+
   reducers: {
-    // logout: (state) => {
-    //   state.token = null;
-    // },
     logout: (state) => {
-      state.token = null;
-      localStorage.removeItem("token");
+      state.isAuthenticated = false;
+      state.user = null;
+      state.error = null;
+      state.loading = false;
     },
   },
+
   extraReducers: (builder) => {
     builder
+
+      /* ================= LOGIN ================= */
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
+      .addCase(loginUser.fulfilled, (state) => {
         state.loading = false;
-        state.token = action.payload.access_token;
-        localStorage.setItem("token", action.payload.access_token);
+        // ❌ DO NOTHING HERE (IMPORTANT)
       })
-      .addCase(loginUser.rejected, (state) => {
+      .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = "Login failed";
+        state.error = action.payload as string;
       })
-      .addCase(registerUser.pending, (state) => {
-        state.loading = true;
-      })
+
+      /* ================= REGISTER ================= */
       .addCase(registerUser.fulfilled, (state) => {
         state.loading = false;
       })
-      .addCase(registerUser.rejected, (state) => {
+
+      /* ================= ME ================= */
+      .addCase(getCurrentUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.error = "Signup failed";
+        state.isAuthenticated = true;
+        state.user = action.payload?.data || null;
+      })
+      .addCase(getCurrentUser.rejected, (state) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
       });
   },
 });

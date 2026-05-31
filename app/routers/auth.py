@@ -64,8 +64,6 @@ def signup(user: UserCreate):
             }
         )
 
-
-
 @router.post("/login")
 def login(user: LoginUser, response: Response):
     try:
@@ -159,11 +157,62 @@ def refresh_token(request: Request, response: Response):
         response.set_cookie("refresh_token", new_refresh, httponly=True)
         return {"message": "Token refreshed"}
     except:
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
-    
-
+        raise HTTPException(status_code=401, detail="Invalid refresh token")   
 @router.post("/logout")
 def logout(response: Response):
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
         return {"message": "Logged out"}
+
+@router.get("/me")
+def get_current_user(request: Request):
+    try:
+        print("COOKIES:", request.cookies)
+        print("HEADERS:", request.headers)
+        access_token = request.cookies.get("access_token")
+        if not access_token:
+            raise HTTPException(
+                status_code=401,
+                detail="Not authenticated"
+            )
+        
+        payload = decode_token(access_token)
+        if not payload:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid token"
+            )
+        username = payload.get("sub")
+        role = payload.get("role")
+
+        if not username:
+            raise HTTPException(
+                status_code=401,
+                detail="Token missing user info"
+            )
+        cursor.execute(
+            "SELECT username, email, role FROM users WHERE username=%s",
+            (username,)
+        )
+        user = cursor.fetchone()
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found"
+            )
+        return success_response(
+            data={
+                "username": user["username"],
+                "email": user["email"],
+                "role": user["role"]
+            },
+            message="Current user fetched successfully"
+        )
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print("ME ERROR:", str(e))
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+        )
