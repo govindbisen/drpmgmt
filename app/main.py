@@ -131,8 +131,10 @@ from fastapi.middleware.cors import CORSMiddleware
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # dev ke liye
-    allow_credentials=True,
+    allow_origins=[
+        "http://localhost:5173",
+    ],
+    allow_credentials=True, # cookie ke lie 
     allow_methods=["*"],
     allow_headers=["*"],
 )

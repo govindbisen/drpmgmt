@@ -3,7 +3,7 @@ import { useAppDispatch } from "../redux/hooks/reduxHooks";
 import { registerUser } from "../redux/features/auth/authSlice";
 import styles from "./Signup.module.css";
 import { Link } from "react-router-dom";
-
+import { toast } from "react-toastify";
 
 export default function Signup() {
   const dispatch = useAppDispatch();
@@ -12,8 +12,21 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
 
-  const handleSignup = () => {
-    dispatch(registerUser({ username, password, email }));
+
+
+  const handleSignup = async () => {
+    try {
+      const response: any = await dispatch(
+        registerUser({ username, password, email })
+      ).unwrap();
+      toast.success(response?.message || "Success");
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong"
+      );
+    }
   };
 
   return (
