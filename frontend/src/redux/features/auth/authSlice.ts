@@ -46,9 +46,12 @@ export const getCurrentUser = createAsyncThunk(
   "auth/me",
   async (_, { rejectWithValue }) => {
     try {
+      console.log("calling /me");
       const res = await API.get("/auth/me");
+      console.log("response", res.data);
       return res.data;
     } catch (err: any) {
+      console.log("error", err);
       return rejectWithValue("Not authenticated");
     }
   },

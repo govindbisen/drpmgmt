@@ -5,7 +5,7 @@
 
 from fastapi import APIRouter, HTTPException,Response,Request
 from app.schemas.user import UserCreate,LoginUser
-from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_DAYS
+from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_DAYS,REFRESH_TOKEN_EXPIRE_SECONDS,ACCESS_TOKEN_EXPIRE_SECONDS
 
 from app.utils.security import (
     verify_password,
@@ -18,6 +18,8 @@ from fastapi import APIRouter, HTTPException, Response
 import traceback
 
 router = APIRouter(prefix="/auth")
+
+from datetime import datetime, timedelta, timezone
 
 @router.post("/signup")
 def signup(user: UserCreate):
@@ -100,14 +102,14 @@ def login(user: LoginUser, response: Response):
             key="access_token",
             value=access_token,
             httponly=True,
-            max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            max_age=ACCESS_TOKEN_EXPIRE_SECONDS,
             samesite="lax"
         )
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+            max_age=REFRESH_TOKEN_EXPIRE_SECONDS,
             samesite="lax"
         )
         return {
@@ -153,11 +155,27 @@ def refresh_token(request: Request, response: Response):
             (new_refresh, username)
         )
         conn.commit()
-        response.set_cookie("access_token", new_access, httponly=True)
-        response.set_cookie("refresh_token", new_refresh, httponly=True)
+        response.set_cookie(
+            key="access_token",
+            value=new_access,
+            httponly=True,
+            max_age=ACCESS_TOKEN_EXPIRE_SECONDS,
+            samesite="lax",
+            path="/"
+        )
+
+        response.set_cookie(
+    key="refresh_token",
+    value=new_refresh,
+    httponly=True,
+    max_age=REFRESH_TOKEN_EXPIRE_SECONDS,
+    samesite="lax",
+    path="/"
+)
         return {"message": "Token refreshed"}
     except:
         raise HTTPException(status_code=401, detail="Invalid refresh token")   
+
 @router.post("/logout")
 def logout(response: Response):
         response.delete_cookie("access_token")
@@ -170,6 +188,7 @@ def get_current_user(request: Request):
         print("COOKIES:", request.cookies)
         print("HEADERS:", request.headers)
         access_token = request.cookies.get("access_token")
+        print("ACCESS TOKEN:" , access_token )
         if not access_token:
             raise HTTPException(
                 status_code=401,
