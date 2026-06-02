@@ -35,6 +35,21 @@ export default function Dashboard() {
     dispatch(fetchBlogs());
   }, []);
 
+
+  useEffect(() => {
+    const socket = new WebSocket("ws://localhost:8000/ws");
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === "NEW_BLOG") {
+        alert("New Blog: " + data.title);
+      }
+    };
+
+    return () => socket.close();
+  }, []);
+
   const handleCreate = async () => {
     if (!title || !content) return;
 

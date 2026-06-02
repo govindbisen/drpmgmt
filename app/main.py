@@ -1,6 +1,7 @@
 from fastapi import FastAPI,Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
+from app.routers import ws
 
 from fastapi.templating import Jinja2Templates
 templates = Jinja2Templates(directory="templates")
@@ -145,3 +146,4 @@ app.add_middleware(
 app.include_router(blog_router.router)
 app.include_router(auth.router)
 app.include_router(user.router)
+app.include_router(ws.router)

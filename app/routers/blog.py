@@ -11,6 +11,8 @@ from app.schemas.blog import (
     BlogUpdate,
     
 )
+from app.websocket.manager import manager
+
 
 from app.utils.deps import get_current_user
 from app.db.postgres import conn, cursor
@@ -25,7 +27,7 @@ router = APIRouter(
 )
 
 @router.post("/")
-def create_blog(
+async def create_blog(
     blog: BlogCreate,
     # user=Depends(get_current_user)
 ):
@@ -44,7 +46,15 @@ def create_blog(
             "user"
         )
     )
+
+    await manager.broadcast({
+            "type": "NEW_BLOG",
+            "title":  blog.title,
+             "author": "user" 
+    })
+
     conn.commit()
+    
     created_blog = cursor.fetchone()
     return created_blog
 
