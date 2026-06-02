@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import {
   fetchBlogs,
   createBlog,
-  deleteBlog
+  updateBlog,
+  uploadBlogImage,
+  deleteBlog,
 } from "../redux/features/blog/blogSlice";
+
 
 import {
   useAppDispatch,
@@ -17,6 +20,8 @@ export default function Dashboard() {
   const { blogs } = useAppSelector(
     state => state.blog
   );
+
+  console.log(blogs)
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -32,30 +37,29 @@ export default function Dashboard() {
 
   const handleCreate = async () => {
     if (!title || !content) return;
+
     const res: any = await dispatch(
       createBlog({
         title,
-        content
+        content,
       })
     );
 
     const blogId = res.payload.id;
 
     if (image) {
-      const formData = new FormData();
-      formData.append("file", image);
-      await fetch(
-        `http://127.0.0.1:8000/blogs/${blogId}/upload-image`,
-        {
-          method: "POST",
-          body: formData
-        }
+      await dispatch(
+        uploadBlogImage({
+          blogId,
+          file: image,
+        })
       );
     }
 
     setTitle("");
     setContent("");
     setImage(null);
+
     dispatch(fetchBlogs());
   };
 
@@ -73,50 +77,35 @@ export default function Dashboard() {
     setEditImage(null);
   };
 
-  const saveEdit = async (
-    id: number
-  ) => {
-    await fetch(
-      `http://127.0.0.1:8000/blogs/${id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type":
-            "application/json",
-
-          Authorization:
-            `Bearer ${localStorage.getItem("token")}`
-        },
-
-        body: JSON.stringify({
-          title: editTitle,
-          content: editContent,
-          category: "spiritual"
-        })
-      }
+  const saveEdit = async (id: number) => {
+    await dispatch(
+      updateBlog({
+        id,
+        title: editTitle,
+        content: editContent,
+        category: "spiritual",
+      })
     );
 
     if (editImage) {
-      const formData = new FormData();
-      formData.append(
-        "file",
-        editImage
-      );
-      await fetch(
-        `http://127.0.0.1:8000/blogs/${id}/upload-image`,
-        {
-          method: "POST",
-          body: formData
-        }
+      await dispatch(
+        uploadBlogImage({
+          blogId: id,
+          file: editImage,
+        })
       );
     }
+
     setEditingId(null);
+    setEditTitle("");
+    setEditContent("");
+    setEditImage(null);
+
     dispatch(fetchBlogs());
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    dispatch(logout());
+  const handleLogout = async () => {
+    await dispatch(logout());
   };
 
   return (
@@ -265,7 +254,6 @@ export default function Dashboard() {
         ====================== */}
 
         <div className={styles.createSection}>
-
           <div className={styles.sectionHeader}>
 
             <h2>
@@ -388,7 +376,7 @@ export default function Dashboard() {
                     className={
                       styles.blogImage
                     }
-                    src={`http://127.0.0.1:8000/${b.image}`}
+                    src={`http://localhost:8000/${b.image}`}
                     alt={b.title}
                   />
 

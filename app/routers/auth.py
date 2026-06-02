@@ -24,14 +24,14 @@ from datetime import datetime, timedelta, timezone
 @router.post("/signup")
 def signup(user: UserCreate):
     try: 
-        print(user)
+        # print(user)
         cursor.execute(
             "SELECT * FROM users WHERE username=%s",
             (user.username,)
         )
 
         existing_user = cursor.fetchone()
-        print(existing_user)
+        # print(existing_user)
 
         if existing_user:
             raise HTTPException(
@@ -118,7 +118,7 @@ def login(user: LoginUser, response: Response):
     except HTTPException as e:
         raise e
     except Exception as e:
-        print("ERROR:", str(e))
+        # print("ERROR:", str(e))
         traceback.print_exc()
         raise HTTPException(
             status_code=500,
@@ -185,10 +185,10 @@ def logout(response: Response):
 @router.get("/me")
 def get_current_user(request: Request):
     try:
-        print("COOKIES:", request.cookies)
-        print("HEADERS:", request.headers)
+        # print("COOKIES:", request.cookies)
+        # print("HEADERS:", request.headers)
         access_token = request.cookies.get("access_token")
-        print("ACCESS TOKEN:" , access_token )
+        # print("ACCESS TOKEN:" , access_token )
         if not access_token:
             raise HTTPException(
                 status_code=401,
@@ -230,7 +230,7 @@ def get_current_user(request: Request):
     except HTTPException as e:
         raise e
     except Exception as e:
-        print("ME ERROR:", str(e))
+        # print("ME ERROR:", str(e))
         raise HTTPException(
             status_code=500,
             detail="Internal server error"

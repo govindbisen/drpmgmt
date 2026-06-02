@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import API from "../../../api/axiosConfig";
 
 interface Blog {
   id: number;
   title: string;
   content: string;
-  image_url?: string;
+  image?: string;
   username: string;
 }
 
@@ -20,18 +20,51 @@ const initialState: BlogState = {
 };
 
 export const fetchBlogs = createAsyncThunk("blog/fetch", async () => {
-  const res = await axios.get("http://127.0.0.1:8000/blogs");
+  const res = await API.get("/blogs");
   return res.data;
 });
 
 export const createBlog = createAsyncThunk(
   "blog/create",
-  async (data: { title: string; content: string }, { getState }) => {
-    const state: any = getState();
-    const token = state.auth.token;
+  async (data: { title: string; content: string }) => {
+    const res = await API.post("/blogs", data);
+    return res.data;
+  },
+);
 
-    const res = await axios.post("http://127.0.0.1:8000/blogs", data, {
-      headers: { Authorization: `Bearer ${token}` },
+export const updateBlog = createAsyncThunk(
+  "blog/update",
+  async ({
+    id,
+    title,
+    content,
+    category,
+  }: {
+    id: number;
+    title: string;
+    content: string;
+    category: string;
+  }) => {
+    const res = await API.put(`/blogs/${id}`, {
+      title,
+      content,
+      category,
+    });
+
+    return res.data;
+  },
+);
+
+export const uploadBlogImage = createAsyncThunk(
+  "blog/uploadImage",
+  async ({ blogId, file }: { blogId: number; file: File }) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await API.post(`/blogs/${blogId}/upload-image`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     });
 
     return res.data;
@@ -41,13 +74,7 @@ export const createBlog = createAsyncThunk(
 export const deleteBlog = createAsyncThunk(
   "blog/delete",
   async (id: number) => {
-    await fetch(`http://127.0.0.1:8000/blogs/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-
+    await API.delete(`/blogs/${id}`);
     return id;
   },
 );
@@ -61,15 +88,24 @@ const blogSlice = createSlice({
       .addCase(fetchBlogs.pending, (state) => {
         state.loading = true;
       })
+
       .addCase(fetchBlogs.fulfilled, (state, action) => {
         state.loading = false;
         state.blogs = action.payload;
       })
+
       .addCase(createBlog.fulfilled, (state, action) => {
         state.blogs.push(action.payload);
       })
+
+      .addCase(updateBlog.fulfilled, (state, action) => {
+        state.blogs = state.blogs.map((blog) =>
+          blog.id === action.payload.id ? action.payload : blog,
+        );
+      })
+
       .addCase(deleteBlog.fulfilled, (state, action) => {
-        state.blogs = state.blogs.filter((b) => b.id !== action.payload);
+        state.blogs = state.blogs.filter((blog) => blog.id !== action.payload);
       });
   },
 });

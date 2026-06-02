@@ -62,7 +62,7 @@ def get_blogs():
 def update_blog(
     id: int,
     blog: BlogUpdate,
-    # user=Depends(get_current_user)
+    user=Depends(get_current_user)
 ):
     cursor.execute(
         "SELECT * FROM blogs WHERE id=%s",
@@ -98,7 +98,7 @@ def update_blog(
 @router.delete("/{id}")
 def delete_blog(
     id: int,
-    # user=Depends(get_current_user)
+    user=Depends(get_current_user)
 ):
 
     cursor.execute(
@@ -112,6 +112,27 @@ def delete_blog(
         raise HTTPException(
             status_code=404,
             detail="Blog not found"
+        )
+    
+
+    cursor.execute(
+        "SELECT * FROM users WHERE username=%s",
+        (user["sub"],)
+    )
+
+    current_user = cursor.fetchone()
+
+    if not current_user:
+        raise HTTPException(
+            status_code=401,
+            detail="User not found"
+        )
+
+    print("-------------------==>>>>",blog,current_user)
+    if blog["user_id"] != current_user["id"]:
+        raise HTTPException(
+            status_code=403,
+            detail="You can delete only your own blogs"
         )
 
     cursor.execute(
@@ -131,15 +152,11 @@ def protected_route(
     return {"msg": f"Hello {user}"}
 
 
-# =========================
-# IMAGE UPLOAD
-# =========================
-
-@router.post("/blogs/{id}/upload-image")
+@router.post("/{id}/upload-image")
 def upload_image(
     id: int,
     file: UploadFile = File(...),
-    # user=Depends(get_current_user)
+    user=Depends(get_current_user)
 ):
 
     os.makedirs(
@@ -171,11 +188,8 @@ def upload_image(
     }
 
 
-# =========================
-# VIDEO UPLOAD
-# =========================
 
-@router.post("/blogs/{id}/upload-video")
+@router.post("/{id}/upload-video")
 def upload_video(
     id: int,
     file: UploadFile = File(...),
