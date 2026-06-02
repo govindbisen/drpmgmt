@@ -165,12 +165,12 @@ def refresh_token(request: Request, response: Response):
         )
 
         response.set_cookie(
-    key="refresh_token",
-    value=new_refresh,
-    httponly=True,
-    max_age=REFRESH_TOKEN_EXPIRE_SECONDS,
-    samesite="lax",
-    path="/"
+        key="refresh_token",
+        value=new_refresh,
+        httponly=True,
+        max_age=REFRESH_TOKEN_EXPIRE_SECONDS,
+        samesite="lax",
+        path="/"
 )
         return {"message": "Token refreshed"}
     except:

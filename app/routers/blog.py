@@ -6,6 +6,7 @@ from fastapi import (
     HTTPException
 )
 
+
 from app.schemas.blog import (
     BlogCreate,
     BlogUpdate,
@@ -14,7 +15,7 @@ from app.schemas.blog import (
 from app.websocket.manager import manager
 
 
-from app.utils.deps import get_current_user
+from app.utils.deps import get_current_user,RoleChecker
 from app.db.postgres import conn, cursor
 
 import shutil
@@ -29,7 +30,7 @@ router = APIRouter(
 @router.post("/")
 async def create_blog(
     blog: BlogCreate,
-    # user=Depends(get_current_user)
+    current_user: dict = Depends(RoleChecker(["admin", "user"]))
 ):
 
     cursor.execute(
@@ -43,18 +44,16 @@ async def create_blog(
             blog.title,
             blog.content,
             blog.category,
-            "user"
+            current_user["sub"] 
         )
     )
 
     await manager.broadcast({
             "type": "NEW_BLOG",
             "title":  blog.title,
-             "author": "user" 
+            "author": current_user["sub"]
     })
-
     conn.commit()
-    
     created_blog = cursor.fetchone()
     return created_blog
 
@@ -72,7 +71,7 @@ def get_blogs():
 def update_blog(
     id: int,
     blog: BlogUpdate,
-    user=Depends(get_current_user)
+    current_user: dict = Depends(RoleChecker(["admin", "editor", "user"]))
 ):
     cursor.execute(
         "SELECT * FROM blogs WHERE id=%s",
@@ -84,6 +83,13 @@ def update_blog(
             status_code=404,
             detail="Blog not found"
         )
+    
+    if current_user["role"] == "user" and existing_blog["author"] != current_user["sub"]:
+            raise HTTPException(
+                status_code=403,
+                detail="You can only edit your own blogs"
+            )
+
     cursor.execute(
         """
         UPDATE blogs
@@ -108,14 +114,13 @@ def update_blog(
 @router.delete("/{id}")
 def delete_blog(
     id: int,
-    user=Depends(get_current_user)
+    current_user: dict = Depends(RoleChecker(["admin", "user"]))
 ):
 
     cursor.execute(
         "SELECT * FROM blogs WHERE id=%s",
         (id,)
     )
-
     blog = cursor.fetchone()
 
     if not blog:
@@ -124,32 +129,22 @@ def delete_blog(
             detail="Blog not found"
         )
     
+    print("TOKEN USERNAME IS:", current_user["sub"])
+    print("DATABASE AUTHOR IS:", blog["author"])
 
-    cursor.execute(
-        "SELECT * FROM users WHERE username=%s",
-        (user["sub"],)
-    )
-
-    current_user = cursor.fetchone()
-
-    if not current_user:
-        raise HTTPException(
-            status_code=401,
-            detail="User not found"
-        )
-
-    print("-------------------==>>>>",blog,current_user)
-    if blog["user_id"] != current_user["id"]:
+    if current_user["role"] == "user" and blog["author"] != current_user["sub"]:
         raise HTTPException(
             status_code=403,
             detail="You can delete only your own blogs"
         )
+
 
     cursor.execute(
         "DELETE FROM blogs WHERE id=%s",
         (id,)
     )
     conn.commit()
+    
     return {
         "message": "Blog deleted successfully"
     }

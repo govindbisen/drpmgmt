@@ -9,21 +9,6 @@ from jose import jwt
 SECRET_KEY = "secret123"
 ALGORITHM = "HS256"
 
-
-# def get_current_user(token=Depends(auth_scheme)):
-#     try:
-#         token = token.credentials 
-#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#         username = payload.get("sub")
-        
-#         if not username:
-#             raise HTTPException(status_code=401, detail="In valid token")
-#         return username
-    
-#     except Exception:
-#         raise HTTPException(status_code=401, detail="Token invalid or expired")
-
-
 from app.utils.token import decode_token
 
 def get_current_user(request: Request):
@@ -47,3 +32,19 @@ def get_current_user(request: Request):
             status_code=401,
             detail="Token invalid or expired"
         )
+    
+
+class RoleChecker:
+        def __init__(self, allowed_roles: list[str]):
+            self.allowed_roles = allowed_roles
+
+        def __call__(self, current_user: dict = Depends(get_current_user)) -> dict:
+            user_role = current_user.get("role")
+        
+            if user_role not in self.allowed_roles:
+                raise HTTPException(
+                    status_code=403,
+                    detail="You do not have permission to access this resource"
+                )
+                
+            return current_user
