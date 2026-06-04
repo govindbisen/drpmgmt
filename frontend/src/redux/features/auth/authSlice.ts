@@ -57,6 +57,18 @@ export const getCurrentUser = createAsyncThunk(
   },
 );
 
+export const logoutUser = createAsyncThunk(
+  "auth/logoutUser",
+  async (_, { rejectWithValue }) => {
+    try {
+      await API.post("/auth/logout");
+      return true;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || "Logout failed");
+    }
+  },
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -72,6 +84,12 @@ const authSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = null;
+        state.loading = false;
+      })
 
       .addCase(loginUser.pending, (state) => {
         state.loading = true;

@@ -1,8 +1,8 @@
-from pydantic import BaseModel # to validate request
-from pydantic import field_validator # decorator to validate field
+from pydantic import BaseModel,field_validator
 from typing import Optional
 from enum import Enum
 
+# roles 
 class UserRole(str, Enum):
     admin = "admin"
     user = "user"

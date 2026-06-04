@@ -7,6 +7,7 @@ import {
   deleteBlog,
 } from "../redux/features/blog/blogSlice";
 
+import { logoutUser } from "../redux/features/auth/authSlice";
 
 import {
   useAppDispatch,
@@ -120,7 +121,7 @@ export default function Dashboard() {
   };
 
   const handleLogout = async () => {
-    await dispatch(logout());
+    await dispatch(logoutUser());
   };
 
   return (
