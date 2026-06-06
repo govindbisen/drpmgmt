@@ -38,7 +38,7 @@ export default function Dashboard() {
 
 
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8000/ws");
+    const socket = new WebSocket(`ws://localhost:8000/ws${userId}`);
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);

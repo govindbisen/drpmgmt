@@ -6,6 +6,10 @@ from fastapi import (
     HTTPException
 )
 
+import redis
+import json
+r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
 
 from app.schemas.blog import (
     BlogCreate,
@@ -48,24 +52,46 @@ async def create_blog(
         )
     )
 
-    await manager.broadcast({
-            "type": "NEW_BLOG",
-            "title":  blog.title,
-            "author": current_user["sub"]
-    })
+
     conn.commit()
     created_blog = cursor.fetchone()
-    return created_blog
 
+    
+    await manager.broadcast_except_user(
+        {
+            "type": "NEW_BLOG",
+            "title": blog.title,
+            "author": current_user["sub"]
+        },
+        exclude_user=current_user["sub"]
+    )
+    return created_blog
 
 @router.get("/")
 def get_blogs():
-    cursor.execute(
-        "SELECT * FROM blogs ORDER BY id DESC"
-    )
-    blogs = cursor.fetchall()
-    return blogs
+    cached_blogs = r.get("blogs")
 
+    if cached_blogs:
+        print("Data From Redis")
+        if isinstance(cached_blogs, bytes):
+            cached_blogs = cached_blogs.decode("utf-8")
+        return json.loads(cached_blogs)
+
+    print("Data From Database")
+
+    cursor.execute("SELECT id, title, content FROM blogs ORDER BY id DESC")
+    rows = cursor.fetchall()
+
+    blogs = []
+    for row in rows:
+        blogs.append({
+            "id": row["id"],
+            "title": row["title"],
+            "content": row["content"]
+        })
+
+    r.setex("blogs", 60, json.dumps(blogs))
+    return blogs
 
 @router.put("/{id}")
 def update_blog(
@@ -228,3 +254,15 @@ def upload_video(
         "message": "Video uploaded",
         "path": file_path
     }
+
+
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
+@router.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
+    await manager.connect(user_id, websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(user_id)
