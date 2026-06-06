@@ -3,12 +3,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "./redux/hooks/reduxHooks";
 import { getCurrentUser } from "./redux/features/auth/authSlice";
 
-import ProtectedRoute from '../src/component/ProtectedRoute'
-import PublicRoute from '../src/component/PublicRoute'
+import ProtectedRoute from './component/AuthPermission/ProtectedRoute'
+import PublicRoute from '../src/component/AuthPermission/PublicRoute'
 
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Dashboard from "./pages/Dashboard";
+import Login from "./pages/loginSignup/Login/Login";
+import Signup from "./pages/loginSignup/SignUp/Signup";
+import Dashboard from "./pages/Dashboard/Dashboard";
 import NotFound from "./pages/NotFound/NotFound";
 
 /* Toast */

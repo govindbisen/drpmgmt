@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useAppDispatch } from "../redux/hooks/reduxHooks";
-import { loginUser, getCurrentUser } from "../redux/features/auth/authSlice";
+import { useAppDispatch } from "../../../redux/hooks/reduxHooks";
+import { loginUser, getCurrentUser } from "../../../redux/features/auth/authSlice";
 import styles from "./Login.module.css";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";

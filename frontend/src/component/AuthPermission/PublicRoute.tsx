@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAppSelector } from "../redux/hooks/reduxHooks";
+import { useAppSelector } from "../../redux/hooks/reduxHooks";
 
 function PublicRoute() {
     const { isAuthenticated, loading } = useAppSelector(

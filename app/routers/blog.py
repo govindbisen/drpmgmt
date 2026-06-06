@@ -57,41 +57,42 @@ async def create_blog(
     created_blog = cursor.fetchone()
 
     
-    await manager.broadcast_except_user(
-        {
-            "type": "NEW_BLOG",
-            "title": blog.title,
-            "author": current_user["sub"]
-        },
-        exclude_user=current_user["sub"]
-    )
+    # await manager.broadcast_except_user(
+    #     {
+    #         "type": "NEW_BLOG",
+    #         "title": blog.title,
+    #         "author": current_user["sub"]
+    #     },
+    #     exclude_user=current_user["sub"]
+    # )
     return created_blog
 
 @router.get("/")
 def get_blogs():
-    cached_blogs = r.get("blogs")
+    # cached_blogs = r.get("blogs")
 
-    if cached_blogs:
-        print("Data From Redis")
-        if isinstance(cached_blogs, bytes):
-            cached_blogs = cached_blogs.decode("utf-8")
-        return json.loads(cached_blogs)
+    # if cached_blogs:
+    #     print("Data From Redis")
+    #     if isinstance(cached_blogs, bytes):
+    #         cached_blogs = cached_blogs.decode("utf-8")
+    #     return json.loads(cached_blogs)
 
     print("Data From Database")
 
     cursor.execute("SELECT id, title, content FROM blogs ORDER BY id DESC")
     rows = cursor.fetchall()
 
-    blogs = []
-    for row in rows:
-        blogs.append({
-            "id": row["id"],
-            "title": row["title"],
-            "content": row["content"]
-        })
+    # blogs = []
+    # for row in rows:
+    #     blogs.append({
+    #         "id": row["id"],
+    #         "title": row["title"],
+    #         "content": row["content"]
+    #     })
 
-    r.setex("blogs", 60, json.dumps(blogs))
-    return blogs
+    # r.setex("blogs", 60, json.dumps(blogs))
+    # return blogs
+    return rows
 
 @router.put("/{id}")
 def update_blog(
